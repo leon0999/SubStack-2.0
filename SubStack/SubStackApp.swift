@@ -1,17 +1,13 @@
-//
-//  SubStackApp.swift
-//  SubStack
-//
-//  Created by user on 6/25/25.
-//
-
 import SwiftUI
 
 @main
 struct SubStackApp: App {
+    @StateObject private var bankDataManager = BankDataManager()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(bankDataManager)
         }
     }
 }
