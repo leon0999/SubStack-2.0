@@ -3,7 +3,7 @@ import SwiftUI
 struct MySubscriptionsView: View {
     @StateObject private var subscriptionManager = SubscriptionManager()
     @State private var selectedCategory = "전체"
-    @State private var showingAddSubscription = false  // 추가
+    @State private var showingAddSubscription = false
 
     let categories = ["전체", "코딩", "글쓰기", "이미지", "생산성", "기타"]
 
@@ -36,27 +36,30 @@ struct MySubscriptionsView: View {
                     .padding()
                 }
 
-                // 총액 표시
-                HStack {
-                    Text("월 총액")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Text("₩\(totalMonthlySpend.formatted())")
-                        .font(.headline)
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 8)
-
-                // 구독 리스트 또는 빈 상태
+                // 구독이 없을 때만 빈 상태 표시
                 if filteredSubscriptions.isEmpty {
-                    EmptyStateView()  // 추가
+                    Spacer()
+                    EmptyStateView()
+                    Spacer()
                 } else {
+                    // 총액 표시 - 구독이 있을 때만
+                    HStack {
+                        Text("월 총액")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text("₩\(totalMonthlySpend.formatted())")
+                            .font(.headline)
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
+
+                    // 구독 리스트
                     List {
                         ForEach(filteredSubscriptions) { subscription in
                             SubscriptionRow(subscription: subscription)
                         }
-                        .onDelete { indexSet in  // 추가
+                        .onDelete { indexSet in
                             deleteSubscriptions(at: indexSet)
                         }
                     }
@@ -65,21 +68,21 @@ struct MySubscriptionsView: View {
             }
             .navigationTitle("내 구독")
             .navigationBarTitleDisplayMode(.large)
-            .toolbar {  // 추가
+            .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { showingAddSubscription = true }) {
                         Image(systemName: "plus")
                     }
                 }
             }
-            .sheet(isPresented: $showingAddSubscription) {  // 추가
+            .sheet(isPresented: $showingAddSubscription) {
                 AddSubscriptionView()
                     .environmentObject(subscriptionManager)
             }
         }
     }
 
-    // 삭제 함수 추가
+    // 삭제 함수
     private func deleteSubscriptions(at offsets: IndexSet) {
         for index in offsets {
             let subscription = filteredSubscriptions[index]
@@ -88,7 +91,7 @@ struct MySubscriptionsView: View {
     }
 }
 
-// 빈 상태 뷰 추가
+// 빈 상태 뷰
 struct EmptyStateView: View {
     var body: some View {
         VStack(spacing: 20) {
@@ -118,20 +121,19 @@ struct CategoryChip: View {
 
     var body: some View {
         Button(action: action) {
-          HStack(spacing: 4) {
-              if let icon = icon {  // 👈 아이콘이 있으면 표시
-                  Image(systemName: icon)
-                      .font(.caption)
-              }
-              Text(title)
-          }
-            Text(title)
-                .font(.subheadline)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(isSelected ? Color.blue : Color(UIColor.systemGray5))
-                .foregroundColor(isSelected ? .white : .primary)
-                .cornerRadius(20)
+            HStack(spacing: 4) {
+                if let icon = icon {
+                    Image(systemName: icon)
+                        .font(.caption)
+                }
+                Text(title)
+            }
+            .font(.subheadline)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(isSelected ? Color.blue : Color(UIColor.systemGray5))
+            .foregroundColor(isSelected ? .white : .primary)
+            .cornerRadius(20)
         }
     }
 }

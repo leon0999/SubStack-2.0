@@ -7,14 +7,14 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		CE8C52E62E0BE637005564F3 /* SubStack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SubStack.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CE51C7162E12792E000E99C9 /* SubStack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SubStack.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
 		CEB5A5CC2E0D1E7F005A184D /* Exceptions for "SubStack" folder in "SubStack" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				App/Info.plist,
 			);
 			target = CE8C52E52E0BE637005564F3 /* SubStack */;
 		};
@@ -46,16 +46,8 @@
 			isa = PBXGroup;
 			children = (
 				CE8C52E82E0BE637005564F3 /* SubStack */,
-				CE8C52E72E0BE637005564F3 /* Products */,
+				CE51C7162E12792E000E99C9 /* SubStack.app */,
 			);
-			sourceTree = "<group>";
-		};
-		CE8C52E72E0BE637005564F3 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				CE8C52E62E0BE637005564F3 /* SubStack.app */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -80,7 +72,7 @@
 			packageProductDependencies = (
 			);
 			productName = SubStack;
-			productReference = CE8C52E62E0BE637005564F3 /* SubStack.app */;
+			productReference = CE51C7162E12792E000E99C9 /* SubStack.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -110,7 +102,7 @@
 			packageReferences = (
 			);
 			preferredProjectObjectVersion = 77;
-			productRefGroup = CE8C52E72E0BE637005564F3 /* Products */;
+			productRefGroup = CE8C52DD2E0BE637005564F3;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -271,7 +263,7 @@
 				DEVELOPMENT_TEAM = MJDM727M35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = SubStack/Info.plist;
+				INFOPLIST_FILE = SubStack/App/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -301,7 +293,7 @@
 				DEVELOPMENT_TEAM = MJDM727M35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = SubStack/Info.plist;
+				INFOPLIST_FILE = SubStack/App/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
