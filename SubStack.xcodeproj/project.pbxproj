@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		CE6664F12E12373400AD7B8D /* FeedKit in Frameworks */ = {isa = PBXBuildFile; productRef = CE6664F02E12373400AD7B8D /* FeedKit */; };
+		CE6664F32E12373400AD7B8D /* XMLKit in Frameworks */ = {isa = PBXBuildFile; productRef = CE6664F22E12373400AD7B8D /* XMLKit */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		CE8C52E62E0BE637005564F3 /* SubStack.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SubStack.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -36,6 +41,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CE6664F12E12373400AD7B8D /* FeedKit in Frameworks */,
+				CE6664F32E12373400AD7B8D /* XMLKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +85,8 @@
 			);
 			name = SubStack;
 			packageProductDependencies = (
+				CE6664F02E12373400AD7B8D /* FeedKit */,
+				CE6664F22E12373400AD7B8D /* XMLKit */,
 			);
 			productName = SubStack;
 			productReference = CE8C52E62E0BE637005564F3 /* SubStack.app */;
@@ -107,6 +116,9 @@
 			);
 			mainGroup = CE8C52DD2E0BE637005564F3;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				CE6664EF2E12373400AD7B8D /* XCRemoteSwiftPackageReference "FeedKit" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = CE8C52E72E0BE637005564F3 /* Products */;
 			projectDirPath = "";
@@ -339,6 +351,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		CE6664EF2E12373400AD7B8D /* XCRemoteSwiftPackageReference "FeedKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/nmdias/FeedKit";
+			requirement = {
+				kind = exactVersion;
+				version = 10.1.3;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		CE6664F02E12373400AD7B8D /* FeedKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CE6664EF2E12373400AD7B8D /* XCRemoteSwiftPackageReference "FeedKit" */;
+			productName = FeedKit;
+		};
+		CE6664F22E12373400AD7B8D /* XMLKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = CE6664EF2E12373400AD7B8D /* XCRemoteSwiftPackageReference "FeedKit" */;
+			productName = XMLKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = CE8C52DE2E0BE637005564F3 /* Project object */;
 }

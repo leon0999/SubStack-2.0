@@ -113,10 +113,18 @@ struct EmptyStateView: View {
 struct CategoryChip: View {
     let title: String
     let isSelected: Bool
+    var icon: String? = nil
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
+          HStack(spacing: 4) {
+              if let icon = icon {  // 👈 아이콘이 있으면 표시
+                  Image(systemName: icon)
+                      .font(.caption)
+              }
+              Text(title)
+          }
             Text(title)
                 .font(.subheadline)
                 .padding(.horizontal, 16)
