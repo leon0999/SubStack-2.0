@@ -60,20 +60,20 @@ struct ProfileView: View {
                     StatRow(title: "올해 총 절약", value: "₩284,000")
                 }
 
-                // 설정
-                Section("설정") {
-                    NavigationLink(destination: Text("알림 설정")) {
-                        Label("알림 설정", systemImage: "bell")
-                    }
 
-                    NavigationLink(destination: Text("결제 수단")) {
-                        Label("결제 수단 관리", systemImage: "creditcard")
-                    }
+              Section("설정") {
+                  NavigationLink(destination: NotificationSettingsView()) {  // 변경
+                      Label("알림 설정", systemImage: "bell")
+                  }
+
+                  NavigationLink(destination: Text("결제 수단")) {
+                      Label("결제 수단 관리", systemImage: "creditcard")
+                  }
 
                   NavigationLink(destination: BankConnectionView()) {
                       Label("은행 계좌 연동", systemImage: "building.columns")
                   }
-                }
+              }
 
                 // 앱 정보
                 Section {

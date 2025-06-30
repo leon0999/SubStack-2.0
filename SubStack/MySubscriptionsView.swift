@@ -1,20 +1,21 @@
 import SwiftUI
 
 struct MySubscriptionsView: View {
-    @State private var subscriptions: [Subscription] = Subscription.sampleData
+    @StateObject private var subscriptionManager = SubscriptionManager()
     @State private var selectedCategory = "전체"
+    @State private var showingAddSubscription = false  // 추가
 
-    let categories = ["전체", "개발", "디자인", "교육", "엔터테인먼트"]
+    let categories = ["전체", "코딩", "글쓰기", "이미지", "생산성", "기타"]
 
     var filteredSubscriptions: [Subscription] {
         if selectedCategory == "전체" {
-            return subscriptions
+            return subscriptionManager.subscriptions.filter { $0.isActive }
         }
-        return subscriptions.filter { $0.category == selectedCategory }
+        return subscriptionManager.subscriptions.filter { $0.isActive && $0.category == selectedCategory }
     }
 
     var totalMonthlySpend: Int {
-        filteredSubscriptions.reduce(0) { $0 + $1.price }
+        subscriptionManager.totalMonthlySpend
     }
 
     var body: some View {
@@ -47,17 +48,65 @@ struct MySubscriptionsView: View {
                 .padding(.horizontal)
                 .padding(.bottom, 8)
 
-                // 구독 리스트
-                List {
-                    ForEach(filteredSubscriptions) { subscription in
-                        SubscriptionRow(subscription: subscription)
+                // 구독 리스트 또는 빈 상태
+                if filteredSubscriptions.isEmpty {
+                    EmptyStateView()  // 추가
+                } else {
+                    List {
+                        ForEach(filteredSubscriptions) { subscription in
+                            SubscriptionRow(subscription: subscription)
+                        }
+                        .onDelete { indexSet in  // 추가
+                            deleteSubscriptions(at: indexSet)
+                        }
                     }
+                    .listStyle(InsetGroupedListStyle())
                 }
-                .listStyle(InsetGroupedListStyle())
             }
             .navigationTitle("내 구독")
             .navigationBarTitleDisplayMode(.large)
+            .toolbar {  // 추가
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { showingAddSubscription = true }) {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
+            .sheet(isPresented: $showingAddSubscription) {  // 추가
+                AddSubscriptionView()
+                    .environmentObject(subscriptionManager)
+            }
         }
+    }
+
+    // 삭제 함수 추가
+    private func deleteSubscriptions(at offsets: IndexSet) {
+        for index in offsets {
+            let subscription = filteredSubscriptions[index]
+            subscriptionManager.deleteSubscription(subscription)
+        }
+    }
+}
+
+// 빈 상태 뷰 추가
+struct EmptyStateView: View {
+    var body: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "rectangle.stack.badge.plus")
+                .font(.system(size: 60))
+                .foregroundColor(.gray)
+
+            Text("아직 추가된 구독이 없습니다")
+                .font(.headline)
+                .foregroundColor(.secondary)
+
+            Text("AI 서비스를 추가하고\n비용을 관리해보세요")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
     }
 }
 
@@ -86,7 +135,7 @@ struct SubscriptionRow: View {
         HStack(spacing: 12) {
             // 아이콘
             RoundedRectangle(cornerRadius: 12)
-                .fill(subscription.color.opacity(0.2))
+                .fill(subscription.displayColor.opacity(0.2))
                 .frame(width: 50, height: 50)
                 .overlay(
                     Text(subscription.icon)
@@ -103,7 +152,7 @@ struct SubscriptionRow: View {
                         .foregroundColor(.secondary)
                     Text("•")
                         .foregroundColor(.secondary)
-                    Text("다음 결제일: \(subscription.nextBillingDate)")
+                    Text("다음 결제일: \(subscription.nextBillingDateString)")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -115,7 +164,7 @@ struct SubscriptionRow: View {
             VStack(alignment: .trailing, spacing: 4) {
                 Text("₩\(subscription.price.formatted())")
                     .font(.headline)
-                Text("/월")
+                Text("/\(subscription.billingCycle.rawValue)")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -124,30 +173,9 @@ struct SubscriptionRow: View {
     }
 }
 
-// 데이터 모델
-struct Subscription: Identifiable {
-    let id = UUID()
-    let name: String
-    let category: String
-    let price: Int
-    let icon: String
-    let color: Color
-    let nextBillingDate: String
-
-    static let sampleData = [
-        Subscription(name: "GitHub Pro", category: "개발", price: 7000, icon: "💻", color: .black, nextBillingDate: "12월 15일"),
-        Subscription(name: "ChatGPT Plus", category: "개발", price: 25000, icon: "🤖", color: .green, nextBillingDate: "12월 20일"),
-        Subscription(name: "Notion", category: "개발", price: 10000, icon: "📝", color: .black, nextBillingDate: "12월 1일"),
-        Subscription(name: "Figma", category: "디자인", price: 15000, icon: "🎨", color: .purple, nextBillingDate: "12월 5일"),
-        Subscription(name: "Netflix", category: "엔터테인먼트", price: 17000, icon: "🎬", color: .red, nextBillingDate: "12월 10일"),
-        Subscription(name: "Spotify", category: "엔터테인먼트", price: 11000, icon: "🎵", color: .green, nextBillingDate: "12월 8일"),
-        Subscription(name: "인프런", category: "교육", price: 19000, icon: "📚", color: .orange, nextBillingDate: "12월 25일"),
-        Subscription(name: "AWS", category: "개발", price: 45000, icon: "☁️", color: .orange, nextBillingDate: "12월 1일"),
-    ]
-}
-
 struct MySubscriptionsView_Previews: PreviewProvider {
     static var previews: some View {
         MySubscriptionsView()
+            .environmentObject(SubscriptionManager())
     }
 }

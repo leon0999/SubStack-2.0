@@ -36,8 +36,10 @@ class NetworkManager: ObservableObject {
                     category: sub.category,
                     price: sub.amount,
                     icon: iconForService(sub.merchant),
-                    color: .blue,
-                    nextBillingDate: "다음 달"
+                    colorName: colorForCategory(sub.category),
+                    billingCycle: .monthly,
+                    startDate: Date(),
+                    lastPaymentDate: Date()
                 )
             }
         } else {
@@ -81,11 +83,24 @@ class NetworkManager: ObservableObject {
         if lowercased.contains("netflix") { return "🎬" }
         if lowercased.contains("spotify") { return "🎵" }
         if lowercased.contains("notion") { return "📝" }
+        if lowercased.contains("chatgpt") { return "🤖" }
+        if lowercased.contains("claude") { return "🧠" }
         return "📱"
+    }
+
+    private func colorForCategory(_ category: String) -> String {
+        switch category {
+        case "개발", "코딩": return "blue"
+        case "엔터테인먼트": return "red"
+        case "음악": return "green"
+        case "디자인": return "purple"
+        case "교육": return "orange"
+        default: return "gray"
+        }
     }
 }
 
-// 에러 타입
+// MARK: - Error Types
 enum NetworkError: LocalizedError {
     case invalidURL
     case serverError(String)
@@ -100,7 +115,7 @@ enum NetworkError: LocalizedError {
     }
 }
 
-// 응답 모델
+// MARK: - Response Models
 struct CardConnectionResponse: Codable {
     let success: Bool
     let subscriptions: [DetectedSubscription]
@@ -127,7 +142,7 @@ struct RecommendationData: Codable {
     let savings: Int
 }
 
-// 사용자 프로필
+// MARK: - User Profile
 struct UserProfile: Codable {
     let developerType: String
     let experienceLevel: String

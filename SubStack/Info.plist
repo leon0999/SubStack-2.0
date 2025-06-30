@@ -8,7 +8,7 @@
 	<true/>
 	<key>NSAllowsLocalNetworking</key>
 	<true/>
-	<key>NSAppTransportSecurity</key>
-	<dict/>
+	<key>NSUserNotificationUsageDescription</key>
+	<string>구독 서비스 결제일을 알려드리기 위해 알림 권한이 필요합니다</string>
 </dict>
 </plist>
