@@ -11,17 +11,21 @@ struct AddSubscriptionView: View {
     @State private var startDate = Date()
     @State private var showingAlert = false
     @State private var alertMessage = ""
+    @State private var selectedIcon = "💳"
+    @State private var selectedColor = "blue"
 
     let categories = ["코딩", "글쓰기", "이미지", "비디오", "생산성", "리서치", "기타"]
+    let icons = ["🤖", "💻", "✍️", "🎨", "📊", "🔍", "💡", "🚀", "💳"]
+    let colors = ["blue", "red", "green", "purple", "orange", "black"]
 
     // 인기 AI 서비스 템플릿
     let popularServices = [
-        ("ChatGPT Plus", "코딩", 25000),
-        ("Claude Pro", "코딩", 20000),
-        ("GitHub Copilot", "코딩", 13000),
-        ("Midjourney", "이미지", 10000),
-        ("Notion AI", "생산성", 10000),
-        ("Perplexity Pro", "리서치", 20000)
+        ("ChatGPT Plus", "코딩", 25000, "🤖"),
+        ("Claude Pro", "코딩", 20000, "🧠"),
+        ("GitHub Copilot", "코딩", 13000, "💻"),
+        ("Midjourney", "이미지", 10000, "🎨"),
+        ("Notion AI", "생산성", 10000, "📝"),
+        ("Perplexity Pro", "리서치", 20000, "🔍")
     ]
 
     var body: some View {
@@ -39,6 +43,7 @@ struct AddSubscriptionView: View {
                                     name = service.0
                                     selectedCategory = service.1
                                     price = String(service.2)
+                                    selectedIcon = service.3
                                 }
                             }
                         }
@@ -61,6 +66,22 @@ struct AddSubscriptionView: View {
                         Text("₩")
                         TextField("가격", text: $price)
                             .keyboardType(.numberPad)
+                    }
+
+                    // 아이콘 선택
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack {
+                            ForEach(icons, id: \.self) { icon in
+                                Text(icon)
+                                    .font(.title2)
+                                    .frame(width: 44, height: 44)
+                                    .background(selectedIcon == icon ? Color.blue.opacity(0.2) : Color(UIColor.systemGray6))
+                                    .cornerRadius(10)
+                                    .onTapGesture {
+                                        selectedIcon = icon
+                                    }
+                            }
+                        }
                     }
                 }
 
@@ -139,13 +160,20 @@ struct AddSubscriptionView: View {
             return
         }
 
-        subscriptionManager.addSubscription(
+        // Subscription 객체 생성 (올바른 파라미터 순서)
+        let newSubscription = Subscription(
             name: name,
             category: selectedCategory,
             price: priceInt,
+            icon: selectedIcon,
+            colorName: selectedColor,
             billingCycle: billingCycle,
-            startDate: startDate
+            startDate: startDate,
+            lastPaymentDate: startDate // 시작일을 마지막 결제일로 설정
         )
+
+        // SubscriptionManager의 addSubscription 메서드 호출
+        subscriptionManager.addSubscription(newSubscription)
 
         dismiss()
     }

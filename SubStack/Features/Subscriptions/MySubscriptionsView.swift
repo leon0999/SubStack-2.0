@@ -21,6 +21,20 @@ struct MySubscriptionsView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
+                // 동기화 상태 표시
+                if subscriptionManager.isSyncing {
+                    HStack {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                        Text("동기화 중...")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity)
+                    .background(Color(UIColor.systemGray6))
+                }
+
                 // 카테고리 필터
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
@@ -74,11 +88,35 @@ struct MySubscriptionsView: View {
                         Image(systemName: "plus")
                     }
                 }
+
+                // 수동 동기화 버튼
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: syncSubscriptions) {
+                        Image(systemName: "arrow.clockwise")
+                            .opacity(subscriptionManager.isSyncing ? 0.5 : 1.0)
+                    }
+                    .disabled(subscriptionManager.isSyncing)
+                }
             }
             .sheet(isPresented: $showingAddSubscription) {
                 AddSubscriptionView()
                     .environmentObject(subscriptionManager)
             }
+        }
+        .onAppear {
+            // 자동 동기화 (마지막 동기화로부터 5분 이상 지났을 때)
+            if let lastSync = subscriptionManager.lastSyncDate,
+               Date().timeIntervalSince(lastSync) > 300 {
+                Task {
+                    await subscriptionManager.syncWithSupabase()
+                }
+            }
+        }
+    }
+
+    private func syncSubscriptions() {
+        Task {
+            await subscriptionManager.syncWithSupabase()
         }
     }
 

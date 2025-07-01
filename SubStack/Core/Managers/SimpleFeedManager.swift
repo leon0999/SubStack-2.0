@@ -12,16 +12,16 @@ class SimpleFeedManager: ObservableObject {
     // 실제 작동하는 RSS 피드들
     private let rssSources = [
         RSSSource(
-            name: "GitHub Blog",
+            name: "Hacker News",
             icon: "💻",
-            url: "https://github.blog/feed/",
+            url: "https://news.ycombinator.com/rss",
             category: "개발"
         ),
         RSSSource(
-            name: "Product Hunt AI",
-            icon: "🚀",
-            url: "https://www.producthunt.com/feed",
-            category: "AI 도구"
+            name: "Reddit r/MachineLearning",
+            icon: "🤖",
+            url: "https://www.reddit.com/r/MachineLearning/.rss",
+            category: "AI 연구"
         )
     ]
 
