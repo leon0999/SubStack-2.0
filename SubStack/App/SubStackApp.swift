@@ -16,7 +16,7 @@ struct SubStackApp: App {
 
     var body: some Scene {
         WindowGroup {
-          AuthContainerView()
+            AuthContainerView()
                 .environmentObject(bankDataManager)
                 .environmentObject(subscriptionManager)
                 .environmentObject(notificationManager)
@@ -29,65 +29,68 @@ struct SubStackApp: App {
                 print("🚀 Supabase 연결 테스트 시작...")
 
                 // 1. 테스트 사용자 생성
+                let testEmail = "test_\(UUID().uuidString.prefix(8))@example.com"
                 let testUser = try await SupabaseManager.shared.createUser(
-                    kakaoId: "test_\(UUID().uuidString.prefix(8))",
+                    testEmail,
                     nickname: "테스트유저_\(Int.random(in: 1000...9999))"
                 )
                 print("✅ 사용자 생성 성공:")
-                print("   - ID: \(testUser.id?.uuidString ?? "없음")")
+                print("   - ID: \(testUser.id)")
+                print("   - Email: \(testUser.email)")
                 print("   - 닉네임: \(testUser.nickname)")
-                print("   - 생성일: \(testUser.createdAt?.formatted() ?? "없음")")
+                print("   - 생성일: \(testUser.createdAt.formatted())")
 
-                // 2. 테스트 구독 추가 (사용자 ID가 있을 때만)
-                if let userId = testUser.id {
-                    // 기존 Subscription 모델 사용 - 정확한 파라미터 순서
-                    let testSubscription = Subscription(
-                        name: "ChatGPT Plus",
-                        category: "AI 도구",
-                        price: 25000,
-                        icon: "🤖",
-                        colorName: "blue",
-                        billingCycle: .monthly,
-                        startDate: Date(),
-                        lastPaymentDate: Date()
-                        // isActive는 기본값이 true라서 생략 가능
-                    )
+                // 2. 테스트 구독 추가
+                // User.id는 UUID 타입이므로 Optional 체크 불필요
+                let userId = testUser.id
 
-                    // Encodable한 구조체로 변경
-                    struct SupabaseSubscription: Encodable {
-                        let user_id: String
-                        let name: String
-                        let category: String
-                        let price: Int
-                        let icon: String
-                    }
+                // 기존 Subscription 모델 사용 - 정확한 파라미터 순서
+                let testSubscription = Subscription(
+                    name: "ChatGPT Plus",
+                    category: "AI 도구",
+                    price: 25000,
+                    icon: "🤖",
+                    colorName: "blue",
+                    billingCycle: .monthly,
+                    startDate: Date(),
+                    lastPaymentDate: Date()
+                    // isActive는 기본값이 true라서 생략 가능
+                )
 
-                    let supabaseData = SupabaseSubscription(
-                        user_id: userId.uuidString,
-                        name: testSubscription.name,
-                        category: testSubscription.category,
-                        price: testSubscription.price,
-                        icon: testSubscription.icon
-                    )
-
-                    // Supabase에 직접 삽입
-                    try await SupabaseManager.shared.client
-                        .from("subscriptions")
-                        .insert(supabaseData)
-                        .execute()
-
-                    print("✅ 구독 추가 성공: \(testSubscription.name)")
-
-                    // 3. 구독 목록 조회
-                    let response = try await SupabaseManager.shared.client
-                        .from("subscriptions")
-                        .select()
-                        .eq("user_id", value: userId)
-                        .execute()
-
-                    print("✅ 구독 목록 조회 성공!")
-                    print("   응답 데이터: \(String(data: response.data, encoding: .utf8) ?? "없음")")
+                // Encodable한 구조체로 변경
+                struct SupabaseSubscription: Encodable {
+                    let user_id: String
+                    let name: String
+                    let category: String
+                    let price: Int
+                    let icon: String
                 }
+
+                let supabaseData = SupabaseSubscription(
+                    user_id: userId.uuidString,
+                    name: testSubscription.name,
+                    category: testSubscription.category,
+                    price: testSubscription.price,
+                    icon: testSubscription.icon
+                )
+
+                // Supabase에 직접 삽입
+                try await SupabaseManager.shared.client
+                    .from("subscriptions")
+                    .insert(supabaseData)
+                    .execute()
+
+                print("✅ 구독 추가 성공: \(testSubscription.name)")
+
+                // 3. 구독 목록 조회
+                let response = try await SupabaseManager.shared.client
+                    .from("subscriptions")
+                    .select()
+                    .eq("user_id", value: userId.uuidString)
+                    .execute()
+
+                print("✅ 구독 목록 조회 성공!")
+                print("   응답 데이터: \(String(data: response.data, encoding: .utf8) ?? "없음")")
 
                 print("🎉 Supabase 연결 테스트 완료!")
 

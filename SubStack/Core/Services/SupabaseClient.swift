@@ -21,23 +21,34 @@ class SupabaseManager {
 
 // 사용 예시
 extension SupabaseManager {
-    // 사용자 생성
-    func createUser(kakaoId: String, nickname: String) async throws -> User {
-        // 전송할 데이터를 명확히 정의
+    // 사용자 생성 - User 모델과 일치하도록 수정
+    func createUser(_ email: String, nickname: String) async throws -> User {
+        // User 모델과 일치하는 요청 구조체
         struct CreateUserRequest: Encodable {
-            let kakao_id: String
+            let id: UUID
+            let email: String
             let nickname: String
+            let auth_provider: String
+            let created_at: String
+            let updated_at: String
         }
 
+        let now = ISO8601DateFormatter().string(from: Date())
+        let userId = UUID()
+
         let request = CreateUserRequest(
-            kakao_id: kakaoId,
-            nickname: nickname
+            id: userId,
+            email: email,
+            nickname: nickname,
+            auth_provider: "email",
+            created_at: now,
+            updated_at: now
         )
 
         let response = try await client
             .from("users")
             .insert(request)
-            .select("id,kakao_id,nickname,profile_image_url,created_at")  // 명시적으로 컬럼 지정
+            .select()
             .single()
             .execute()
 
@@ -46,29 +57,16 @@ extension SupabaseManager {
             print("📝 응답 JSON: \(jsonString)")
         }
 
-        // 임시 디코딩 구조체
-        struct UserResponse: Decodable {
-            let id: Int
-            let kakao_id: String
-            let nickname: String
-            let profile_image_url: String?
-            let created_at: String
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .custom { decoder in
+            let container = try decoder.singleValueContainer()
+            let dateString = try container.decode(String.self)
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            return formatter.date(from: dateString) ?? Date()
         }
 
-        let decoder = JSONDecoder()
-        let userResponse = try decoder.decode(UserResponse.self, from: response.data)
-
-        // User 모델로 변환
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
-        return User(
-            id: userResponse.id,
-            kakaoId: userResponse.kakao_id,
-            nickname: userResponse.nickname,
-            profileImageUrl: userResponse.profile_image_url,
-            createdAt: formatter.date(from: userResponse.created_at)
-        )
+        return try decoder.decode(User.self, from: response.data)
     }
 
     // 구독 추가
@@ -94,4 +92,3 @@ extension SupabaseManager {
         return try decoder.decode([Subscription].self, from: response.data)
     }
 }
-

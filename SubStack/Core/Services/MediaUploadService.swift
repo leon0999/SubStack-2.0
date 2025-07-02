@@ -19,15 +19,16 @@ class MediaUploadService {
             uploadData = data
         }
 
-        // Supabase Storage에 업로드
+        // Supabase Storage에 업로드 - path 레이블 제거
         try await client.storage
             .from("media")
-            .upload(path: filePath, data: uploadData)
+            .upload(filePath, data: uploadData)
 
-        // Public URL 반환
-        return client.storage
+        // Public URL 반환 - path 레이블 제거
+        let publicURL = try client.storage
             .from("media")
             .getPublicURL(path: filePath)
-            .absoluteString
+
+        return publicURL.absoluteString
     }
 }

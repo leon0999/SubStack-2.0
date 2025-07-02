@@ -3,6 +3,7 @@ import Foundation
 import SwiftUI
 
 class SubscriptionManager: ObservableObject {
+    static let shared = SubscriptionManager()
     @Published var subscriptions: [Subscription] = []
     @Published var isSyncing = false
     @Published var lastSyncDate: Date?

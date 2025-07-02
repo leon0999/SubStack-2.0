@@ -15,15 +15,21 @@ struct CreatePostView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // 텍스트 입력
-                TextEditor(text: $content)
-                    .placeholder(when: content.isEmpty) {
+                // 텍스트 입력 - ZStack으로 placeholder 구현
+                ZStack(alignment: .topLeading) {
+                    // Placeholder
+                    if content.isEmpty {
                         Text("AI 작업물이나 경험을 공유해주세요...")
                             .foregroundColor(.secondary)
                             .padding(.horizontal, 4)
                             .padding(.vertical, 8)
                     }
-                    .padding()
+
+                    // TextEditor
+                    TextEditor(text: $content)
+                        .opacity(content.isEmpty ? 0.8 : 1)
+                }
+                .padding()
 
                 // 이미지 프리뷰
                 if let selectedImage {
@@ -47,11 +53,13 @@ struct CreatePostView: View {
                             .font(.title2)
                             .foregroundColor(.blue)
                     }
-                    .onChange(of: selectedItem) { _ in
+                    .onChange(of: selectedItem) { oldValue, newValue in
                         Task {
-                            if let data = try? await selectedItem?.loadTransferable(type: Data.self) {
+                            if let data = try? await newValue?.loadTransferable(type: Data.self) {
                                 selectedImageData = data
-                                selectedImage = Image(uiImage: UIImage(data: data)!)
+                                if let uiImage = UIImage(data: data) {
+                                    selectedImage = Image(uiImage: uiImage)
+                                }
                             }
                         }
                     }

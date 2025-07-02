@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import Supabase
 import Combine
 
@@ -14,7 +15,7 @@ class AuthService: ObservableObject {
     @Published var errorMessage: String?
 
     // MARK: - Private Properties
-    private var authStateListener: RealtimeChannel?
+    private var authStateListener: RealtimeChannelV2?
     private let client = SupabaseManager.shared.client
     private var cancellables = Set<AnyCancellable>()
 
@@ -31,11 +32,8 @@ class AuthService: ObservableObject {
         Task {
             do {
                 let session = try await client.auth.session
-                if let user = session.user {
-                    await handleAuthSuccess(authUser: user)
-                } else {
-                    await handleAuthLogout()
-                }
+                let authUser = session.user  // Optional이 아님
+                await handleAuthSuccess(authUser: authUser)
             } catch {
                 print("❌ Auth 상태 확인 실패: \(error)")
                 await handleAuthLogout()
@@ -49,14 +47,14 @@ class AuthService: ObservableObject {
             for await state in client.auth.authStateChanges {
                 switch state.event {
                 case .signedIn:
-                    if let user = state.session?.user {
-                        await handleAuthSuccess(authUser: user)
+                    if let authUser = state.session?.user {  // 여기는 Optional이 맞음
+                        await handleAuthSuccess(authUser: authUser)
                     }
                 case .signedOut:
                     await handleAuthLogout()
                 case .userUpdated:
-                    if let user = state.session?.user {
-                        await updateUserProfile(authUser: user)
+                    if let authUser = state.session?.user {  // 여기도 Optional이 맞음
+                        await updateUserProfile(authUser: authUser)
                     }
                 default:
                     break
@@ -79,9 +77,7 @@ class AuthService: ObservableObject {
                 password: password
             )
 
-            guard let authUser = authResponse.user else {
-                throw AuthError.signUpFailed
-            }
+            let authUser = authResponse.user  // Optional이 아님, 실패시 throw
 
             // 2. users 테이블에 프로필 생성
             let newUser = User(
@@ -102,7 +98,7 @@ class AuthService: ObservableObject {
             isAuthenticated = true
 
             // 5. SubscriptionManager에 사용자 설정
-            await SubscriptionManager.shared.setCurrentUser(authUser.id)
+            SubscriptionManager().setCurrentUser(authUser.id)
 
             isLoading = false
 
@@ -126,11 +122,9 @@ class AuthService: ObservableObject {
                 password: password
             )
 
-            guard let user = session.user else {
-                throw AuthError.signInFailed
-            }
+            let authUser = session.user  // Optional이 아님
 
-            await handleAuthSuccess(authUser: user)
+            await handleAuthSuccess(authUser: authUser)
             isLoading = false
 
         } catch {
@@ -178,22 +172,28 @@ class AuthService: ObservableObject {
 
     /// 프로필 업데이트
     func updateProfile(nickname: String? = nil, profileImageUrl: String? = nil) async throws {
-        guard let currentUser = currentUser else {
+        guard let currentUser = currentUser else {  // 이건 Optional이므로 guard let 사용
             throw AuthError.notAuthenticated
         }
 
         isLoading = true
 
         do {
-            // 업데이트할 데이터 준비
-            var updates: [String: Any] = [:]
-            if let nickname = nickname {
-                updates["nickname"] = nickname
+            // Encodable 구조체로 업데이트 데이터 준비
+            struct ProfileUpdate: Encodable {
+                let nickname: String?
+                let profile_image_url: String?
+                let updated_at: String
             }
-            if let profileImageUrl = profileImageUrl {
-                updates["profile_image_url"] = profileImageUrl
-            }
-            updates["updated_at"] = Date().timeIntervalSince1970
+
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+            let updates = ProfileUpdate(
+                nickname: nickname,
+                profile_image_url: profileImageUrl,
+                updated_at: formatter.string(from: Date())
+            )
 
             // Supabase 업데이트
             try await client
@@ -202,14 +202,16 @@ class AuthService: ObservableObject {
                 .eq("id", value: currentUser.id)
                 .execute()
 
-            // 로컬 상태 업데이트
-            var updatedUser = currentUser
-            if let nickname = nickname {
-                updatedUser.nickname = nickname
-            }
-            if let profileImageUrl = profileImageUrl {
-                updatedUser.profileImageUrl = profileImageUrl
-            }
+            // 로컬 상태 업데이트 - 새 User 인스턴스 생성
+            let updatedUser = User(
+                id: currentUser.id,
+                email: currentUser.email,
+                nickname: nickname ?? currentUser.nickname,
+                profileImageUrl: profileImageUrl ?? currentUser.profileImageUrl,
+                authProvider: currentUser.authProvider,
+                createdAt: currentUser.createdAt,
+                updatedAt: Date()
+            )
 
             self.currentUser = updatedUser
             isLoading = false
@@ -235,7 +237,13 @@ class AuthService: ObservableObject {
                 .execute()
 
             let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .iso8601
+            decoder.dateDecodingStrategy = .custom { decoder in
+                let container = try decoder.singleValueContainer()
+                let dateString = try container.decode(String.self)
+                let formatter = ISO8601DateFormatter()
+                formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                return formatter.date(from: dateString) ?? Date()
+            }
 
             let user = try decoder.decode(User.self, from: response.data)
 
@@ -243,7 +251,7 @@ class AuthService: ObservableObject {
             isAuthenticated = true
 
             // SubscriptionManager에 사용자 설정
-            await SubscriptionManager.shared.setCurrentUser(authUser.id)
+            SubscriptionManager().setCurrentUser(authUser.id)
 
         } catch {
             print("❌ 사용자 프로필 조회 실패: \(error)")
@@ -282,27 +290,54 @@ class AuthService: ObservableObject {
 
     /// 사용자 프로필 생성
     private func createUserProfile(_ user: User) async throws {
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
+        // Encodable 구조체 정의
+        struct UserCreateRequest: Encodable {
+            let id: String
+            let email: String
+            let nickname: String
+            let profile_image_url: String?
+            let auth_provider: String
+            let created_at: String
+            let updated_at: String
+        }
 
-        let userData = try encoder.encode(user)
-        let userDict = try JSONSerialization.jsonObject(with: userData) as? [String: Any] ?? [:]
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+
+        let userRequest = UserCreateRequest(
+            id: user.id.uuidString,
+            email: user.email,
+            nickname: user.nickname,
+            profile_image_url: user.profileImageUrl,
+            auth_provider: user.authProvider,
+            created_at: formatter.string(from: user.createdAt),
+            updated_at: formatter.string(from: user.updatedAt)
+        )
 
         try await client
             .from("users")
-            .insert(userDict)
+            .insert(userRequest)
             .execute()
     }
 
     /// 사용자 프로필 업데이트 (Auth 이벤트에서)
     private func updateUserProfile(authUser: Supabase.User) async {
-        guard let email = authUser.email else { return }
+        guard let email = authUser.email,
+              let currentUser = currentUser,  // Optional 체크
+              currentUser.email != email else { return }
 
-        // 이메일 변경 등의 업데이트 처리
-        if var user = currentUser, user.email != email {
-            user.email = email
-            currentUser = user
-        }
+        // 이메일이 변경된 경우 새 User 인스턴스 생성
+        let updatedUser = User(
+            id: currentUser.id,
+            email: email,
+            nickname: currentUser.nickname,
+            profileImageUrl: currentUser.profileImageUrl,
+            authProvider: currentUser.authProvider,
+            createdAt: currentUser.createdAt,
+            updatedAt: Date()
+        )
+
+        self.currentUser = updatedUser
     }
 
     /// 에러 메시지 변환
