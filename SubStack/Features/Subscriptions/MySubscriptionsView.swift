@@ -4,6 +4,11 @@ struct MySubscriptionsView: View {
     @StateObject private var subscriptionManager = SubscriptionManager()
     @State private var selectedCategory = "전체"
     @State private var showingAddSubscription = false
+    @State private var viewMode: ViewMode = .list
+
+    enum ViewMode {
+        case list, chart, calendar
+    }
 
     let categories = ["전체", "코딩", "글쓰기", "이미지", "생산성", "기타"]
 
@@ -35,49 +40,43 @@ struct MySubscriptionsView: View {
                     .background(Color(UIColor.systemGray6))
                 }
 
-                // 카테고리 필터
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 12) {
-                        ForEach(categories, id: \.self) { category in
-                            CategoryChip(
-                                title: category,
-                                isSelected: selectedCategory == category
-                            ) {
-                                selectedCategory = category
-                            }
-                        }
+                // 뷰 모드 선택 (구독이 있을 때만 표시)
+                if !subscriptionManager.subscriptions.isEmpty {
+                    Picker("View", selection: $viewMode) {
+                        Image(systemName: "list.bullet").tag(ViewMode.list)
+                        Image(systemName: "chart.pie").tag(ViewMode.chart)
+                        Image(systemName: "calendar").tag(ViewMode.calendar)
                     }
+                    .pickerStyle(SegmentedPickerStyle())
                     .padding()
                 }
 
-                // 구독이 없을 때만 빈 상태 표시
-                if filteredSubscriptions.isEmpty {
+                // 구독이 없을 때 빈 상태 표시
+                if subscriptionManager.subscriptions.isEmpty {
                     Spacer()
                     EmptyStateView()
                     Spacer()
                 } else {
-                    // 총액 표시 - 구독이 있을 때만
-                    HStack {
-                        Text("월 총액")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        Spacer()
-                        Text("₩\(totalMonthlySpend.formatted())")
-                            .font(.headline)
+                    // 뷰 모드에 따른 콘텐츠 표시
+                    switch viewMode {
+                    case .list:
+                        // 기존 리스트 뷰
+                        SubscriptionListView(
+                            subscriptions: filteredSubscriptions,
+                            selectedCategory: $selectedCategory,
+                            categories: categories,
+                            totalMonthlySpend: totalMonthlySpend,
+                            onDelete: deleteSubscriptions
+                        )
+                    case .chart:
+                        // 새로운 차트 뷰
+                        SubscriptionChartView()
+                            .environmentObject(subscriptionManager)
+                    case .calendar:
+                        // 새로운 캘린더 뷰
+                        PaymentCalendarView()
+                            .environmentObject(subscriptionManager)
                     }
-                    .padding(.horizontal)
-                    .padding(.bottom, 8)
-
-                    // 구독 리스트
-                    List {
-                        ForEach(filteredSubscriptions) { subscription in
-                            SubscriptionRow(subscription: subscription)
-                        }
-                        .onDelete { indexSet in
-                            deleteSubscriptions(at: indexSet)
-                        }
-                    }
-                    .listStyle(InsetGroupedListStyle())
                 }
             }
             .navigationTitle("내 구독")
@@ -151,75 +150,7 @@ struct EmptyStateView: View {
     }
 }
 
-struct CategoryChip: View {
-    let title: String
-    let isSelected: Bool
-    var icon: String? = nil
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 4) {
-                if let icon = icon {
-                    Image(systemName: icon)
-                        .font(.caption)
-                }
-                Text(title)
-            }
-            .font(.subheadline)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .background(isSelected ? Color.blue : Color(UIColor.systemGray5))
-            .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(20)
-        }
-    }
-}
-
-struct SubscriptionRow: View {
-    let subscription: Subscription
-
-    var body: some View {
-        HStack(spacing: 12) {
-            // 아이콘
-            RoundedRectangle(cornerRadius: 12)
-                .fill(subscription.displayColor.opacity(0.2))
-                .frame(width: 50, height: 50)
-                .overlay(
-                    Text(subscription.icon)
-                        .font(.title2)
-                )
-
-            // 정보
-            VStack(alignment: .leading, spacing: 4) {
-                Text(subscription.name)
-                    .font(.headline)
-                HStack {
-                    Text(subscription.category)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text("•")
-                        .foregroundColor(.secondary)
-                    Text("다음 결제일: \(subscription.nextBillingDateString)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-
-            Spacer()
-
-            // 가격
-            VStack(alignment: .trailing, spacing: 4) {
-                Text("₩\(subscription.price.formatted())")
-                    .font(.headline)
-                Text("/\(subscription.billingCycle.rawValue)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-        }
-        .padding(.vertical, 4)
-    }
-}
+// CategoryChip과 SubscriptionRow는 SubscriptionListView.swift로 이동
 
 struct MySubscriptionsView_Previews: PreviewProvider {
     static var previews: some View {
