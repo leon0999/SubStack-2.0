@@ -13,15 +13,10 @@ struct ContentView: View {
                     Label("내 구독", systemImage: "creditcard.fill")
                 }
 
-            SimpleFeedView()  // 👈 새로 추가
-              .tabItem {
-                  Label("업데이트", systemImage: "bell.badge")
-              }
-
-            DiscoverView()
+          PostFeedView() //
                 .tabItem {
-                    Label("발견하기", systemImage: "sparkles")
-                }
+                    Label("포스트", systemImage: "square.grid.2x2.fill")
+                          }
 
             ProfileView()
                 .tabItem {
