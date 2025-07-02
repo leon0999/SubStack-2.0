@@ -95,19 +95,3 @@ extension SupabaseManager {
     }
 }
 
-// 모델 정의
-struct User: Codable {
-    var id: UUID?  // Int에서 UUID로 변경
-    let kakaoId: String
-    let nickname: String
-    var profileImageUrl: String?
-    var createdAt: Date?
-
-    enum CodingKeys: String, CodingKey {
-        case id
-        case kakaoId = "kakao_id"
-        case nickname
-        case profileImageUrl = "profile_image_url"
-        case createdAt = "created_at"
-    }
-}

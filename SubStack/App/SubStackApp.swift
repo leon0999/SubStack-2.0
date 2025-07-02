@@ -16,7 +16,7 @@ struct SubStackApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+          AuthContainerView()
                 .environmentObject(bankDataManager)
                 .environmentObject(subscriptionManager)
                 .environmentObject(notificationManager)
