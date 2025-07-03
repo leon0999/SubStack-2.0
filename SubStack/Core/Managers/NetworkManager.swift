@@ -1,12 +1,15 @@
 import Foundation
 import Combine
 
+
+
 class NetworkManager: ObservableObject {
     static let shared = NetworkManager()
     private let baseURL = "https://172.30.1.62/api"
 
     @Published var isLoading = false
     @Published var errorMessage: String?
+
 
     // 카드 연동
     func connectCard(cardCompany: String, userId: String, password: String) async throws -> [Subscription] {
@@ -47,36 +50,8 @@ class NetworkManager: ObservableObject {
         }
     }
 
-    // AI 추천 가져오기
-    func getRecommendations(userProfile: UserProfile) async throws -> [Recommendation] {
-        guard let url = URL(string: "\(baseURL)/recommendations") else {
-            throw NetworkError.invalidURL
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        let body = ["userProfile": userProfile.toDictionary()]
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
-
-        let (data, _) = try await URLSession.shared.data(for: request)
-        let response = try JSONDecoder().decode(RecommendationResponse.self, from: data)
-
-        return response.recommendations.map { rec in
-            Recommendation(
-                name: rec.name,
-                icon: "⚡",
-                color: .blue,
-                price: rec.price,
-                tags: [rec.category],
-                aiReason: rec.reason,
-                replacing: nil,
-                savings: rec.savings
-            )
-        }
-    }
-
+    // MARK: - Helper Methods
+    
     private func iconForService(_ name: String) -> String {
         let lowercased = name.lowercased()
         if lowercased.contains("github") { return "💻" }
@@ -127,30 +102,4 @@ struct DetectedSubscription: Codable {
     let amount: Int
     let frequency: String
     let category: String
-}
-
-struct RecommendationResponse: Codable {
-    let recommendations: [RecommendationData]
-}
-
-struct RecommendationData: Codable {
-    let id: Int
-    let name: String
-    let price: Int
-    let category: String
-    let reason: String
-    let savings: Int
-}
-
-// MARK: - User Profile
-struct UserProfile: Codable {
-    let developerType: String
-    let experienceLevel: String
-
-    func toDictionary() -> [String: Any] {
-        return [
-            "developerType": developerType,
-            "experienceLevel": experienceLevel
-        ]
-    }
 }

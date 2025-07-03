@@ -9,8 +9,8 @@ class SupabaseManager {
 
     private init() {
         // Supabase 프로젝트 정보 입력
-        let supabaseURL = "https://YOUR_PROJECT_ID.supabase.co"  // 여기에 Project URL 입력
-        let supabaseKey = "YOUR_ANON_KEY"  // 여기에 anon public key 입력
+        let supabaseURL = "https://shtznywlgdopslugjmce.supabase.co"  // 여기에 Project URL 입력
+        let supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNodHpueXdsZ2RvcHNsdWdqbWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEzMzI0OTYsImV4cCI6MjA2NjkwODQ5Nn0.B-9hvNRWqY1kbAsAuCDX8qoW1e3UqDFl_EBs7KPPAF8"  // 여기에 anon public key 입력
 
         self.client = SupabaseClient(
             supabaseURL: URL(string: supabaseURL)!,
